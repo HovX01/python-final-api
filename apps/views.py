@@ -4,9 +4,11 @@ from apps.models import App
 from apps.permissions import IsAppMember
 from apps.serializers import AppSerializer
 from django.conf import settings
+from drf_spectacular.utils import extend_schema
 
 
 class AppViewSet(viewsets.ModelViewSet):
+    queryset = App.objects.all()
     serializer_class = AppSerializer
     permission_classes = [IsAppMember]
 

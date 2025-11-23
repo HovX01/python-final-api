@@ -11,7 +11,7 @@ class AppSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "description", "created_at", "updated_at", "role")
         read_only_fields = ("id", "created_at", "updated_at", "role")
 
-    def get_role(self, obj):
+    def get_role(self, obj) -> str | None:
         user = self.context["request"].user
         membership = obj.app_users.filter(user=user).first()
         return membership.role if membership else None

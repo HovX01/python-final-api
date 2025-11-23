@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema
 from apps.models import App, AppUser
 from apps.permissions import IsAppOwner
 
@@ -48,11 +49,13 @@ class CollaboratorListCreateView(APIView):
             raise NotFound("App not found.")
         super().initial(request, *args, **kwargs)
 
+    @extend_schema(responses=CollaboratorSerializer(many=True))
     def get(self, request, app_id):
         collaborators = self.app.app_users.all()
         data = CollaboratorSerializer(collaborators, many=True).data
         return Response(data)
 
+    @extend_schema(request=CollaboratorAddSerializer, responses=CollaboratorSerializer)
     def post(self, request, app_id):
         serializer = CollaboratorAddSerializer(data=request.data, context={"app": self.app})
         serializer.is_valid(raise_exception=True)
@@ -72,6 +75,7 @@ class CollaboratorDeleteView(APIView):
             raise NotFound("App not found.")
         super().initial(request, *args, **kwargs)
 
+    @extend_schema(responses={204: None})
     def delete(self, request, app_id, user_id):
         membership = self.app.app_users.filter(user_id=user_id).first()
         if not membership:

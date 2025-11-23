@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
+    "drf_spectacular",
     "billing",
     "apps",
     "adminapi",
@@ -142,6 +143,7 @@ REST_FRAMEWORK = {
         "register": os.getenv("DRF_THROTTLE_REGISTER", "3/minute"),
         "password_reset": os.getenv("DRF_THROTTLE_PASSWORD_RESET", "10/minute"),
     },
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 ACCESS_TOKEN_MINUTES = int(os.getenv("ACCESS_TOKEN_LIFETIME_MINUTES", "5"))
@@ -182,3 +184,10 @@ PLAN_LIMITS = {"basic": 3, "pro": 50}
 CHECKOUT_SUCCESS_URL = os.getenv("CHECKOUT_SUCCESS_URL", f"{FRONTEND_URL}/billing/success")
 CHECKOUT_CANCEL_URL = os.getenv("CHECKOUT_CANCEL_URL", f"{FRONTEND_URL}/billing/cancel")
 PORTAL_RETURN_URL = os.getenv("PORTAL_RETURN_URL", f"{FRONTEND_URL}/billing/portal/return")
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Subscription Platform API",
+    "DESCRIPTION": "API for auth, subscriptions, app limits, and admin operations.",
+    "VERSION": "0.1.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}

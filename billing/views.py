@@ -6,6 +6,7 @@ from django.utils import timezone
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 from billing.models import Subscription
 from billing.serializers import CheckoutSessionSerializer, SubscriptionSerializer
 
@@ -82,6 +83,7 @@ def apply_subscription_data(subscription: Subscription, data: dict):
 class SubscriptionCheckoutSessionView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(request=CheckoutSessionSerializer, responses={200: OpenApiResponse(description="Checkout URL created")})
     def post(self, request):
         serializer = CheckoutSessionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -115,6 +117,7 @@ class SubscriptionCheckoutSessionView(APIView):
 class BillingPortalSessionView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(request=None, responses={200: OpenApiResponse(description="Portal URL created")})
     def post(self, request):
         user = request.user
         subscription = get_or_create_subscription(user)
@@ -129,6 +132,7 @@ class BillingPortalSessionView(APIView):
 class SubscriptionDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(responses={200: SubscriptionSerializer})
     def get(self, request):
         subscription = Subscription.objects.filter(user=request.user).first()
         if not subscription:
@@ -141,6 +145,7 @@ class StripeWebhookView(APIView):
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
 
+    @extend_schema(request=None, responses={200: OpenApiResponse(description="Webhook processed")})
     def post(self, request):
         payload = request.body
         sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")

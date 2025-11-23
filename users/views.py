@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 
 from users.emails import send_password_reset_email, send_verification_email
 from users.serializers import (
@@ -23,7 +24,9 @@ User = get_user_model()
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
     throttle_classes = [RegisterRateThrottle]
+    serializer_class = RegisterSerializer
 
+    @extend_schema(request=RegisterSerializer, responses={201: OpenApiResponse(description="Verification email sent")})
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -34,7 +37,9 @@ class RegisterView(APIView):
 
 class VerifyEmailView(APIView):
     permission_classes = [permissions.AllowAny]
+    serializer_class = VerifyEmailSerializer
 
+    @extend_schema(request=VerifyEmailSerializer, responses={200: OpenApiResponse(description="Email verified")})
     def post(self, request):
         serializer = VerifyEmailSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -102,6 +107,7 @@ class RefreshView(TokenRefreshView):
 class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(request=None, responses={204: OpenApiResponse(description="Logged out")})
     def post(self, request):
         refresh_token = request.data.get("refresh") or request.COOKIES.get(settings.REFRESH_COOKIE_NAME)
         response = Response(status=status.HTTP_204_NO_CONTENT)
@@ -124,7 +130,9 @@ class LogoutView(APIView):
 class PasswordResetRequestView(APIView):
     permission_classes = [permissions.AllowAny]
     throttle_classes = [PasswordResetRateThrottle]
+    serializer_class = PasswordResetRequestSerializer
 
+    @extend_schema(request=PasswordResetRequestSerializer, responses={200: OpenApiResponse(description="Email sent if exists")})
     def post(self, request):
         serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -136,7 +144,9 @@ class PasswordResetRequestView(APIView):
 
 class PasswordResetConfirmView(APIView):
     permission_classes = [permissions.AllowAny]
+    serializer_class = PasswordResetConfirmSerializer
 
+    @extend_schema(request=PasswordResetConfirmSerializer, responses={200: OpenApiResponse(description="Password reset")})
     def post(self, request):
         serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

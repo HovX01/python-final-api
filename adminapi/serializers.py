@@ -25,11 +25,11 @@ class AdminUserSerializer(serializers.ModelSerializer):
             "owned_app_count",
         )
 
-    def get_subscription_status(self, obj):
+    def get_subscription_status(self, obj) -> str | None:
         sub = getattr(obj, "subscription", None)
         return sub.status if sub else None
 
-    def get_subscription_plan(self, obj):
+    def get_subscription_plan(self, obj) -> str | None:
         sub = getattr(obj, "subscription", None)
         return sub.plan_id if sub else None
 

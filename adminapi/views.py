@@ -3,6 +3,7 @@ from django.db.models import Count, Q
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 
 from adminapi.permissions import IsAdminUserType
 from adminapi.serializers import AdminUserSerializer, AdminUserToggleSerializer
@@ -12,7 +13,9 @@ User = get_user_model()
 
 class AdminUserListView(APIView):
     permission_classes = [IsAdminUserType]
+    serializer_class = AdminUserSerializer
 
+    @extend_schema(operation_id="admin_users_list", responses=AdminUserSerializer(many=True))
     def get(self, request):
         qs = User.objects.all().annotate(owned_app_count=Count("owned_apps"))
 
@@ -39,10 +42,12 @@ class AdminUserListView(APIView):
 
 class AdminUserDetailView(APIView):
     permission_classes = [IsAdminUserType]
+    serializer_class = AdminUserSerializer
 
     def get_object(self, pk):
         return User.objects.annotate(owned_app_count=Count("owned_apps")).filter(pk=pk).first()
 
+    @extend_schema(responses=AdminUserSerializer)
     def get(self, request, user_id):
         user = self.get_object(user_id)
         if not user:
@@ -50,6 +55,7 @@ class AdminUserDetailView(APIView):
         serializer = AdminUserSerializer(user)
         return Response(serializer.data)
 
+    @extend_schema(request=AdminUserToggleSerializer, responses=AdminUserSerializer)
     def patch(self, request, user_id):
         user = self.get_object(user_id)
         if not user:
