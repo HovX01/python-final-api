@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
+    "billing",
     "users",
 ]
 
@@ -151,3 +152,20 @@ REFRESH_COOKIE_SAMESITE = os.getenv("REFRESH_COOKIE_SAMESITE", "Lax")
 REFRESH_COOKIE_PATH = os.getenv("REFRESH_COOKIE_PATH", "/")
 REFRESH_COOKIE_DOMAIN = os.getenv("REFRESH_COOKIE_DOMAIN")
 REFRESH_TOKEN_MAX_AGE = int(os.getenv("REFRESH_TOKEN_MAX_AGE_SECONDS", REFRESH_TOKEN_DAYS * 24 * 60 * 60))
+
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+
+STRIPE_PRICE_BASIC_ID = os.getenv("STRIPE_PRICE_BASIC_ID", "price_basic_placeholder")
+STRIPE_PRICE_PRO_ID = os.getenv("STRIPE_PRICE_PRO_ID", "price_pro_placeholder")
+PLAN_PRICE_MAP = {
+    "basic": STRIPE_PRICE_BASIC_ID,
+    "pro": STRIPE_PRICE_PRO_ID,
+}
+
+PLAN_LIMITS = {"basic": 3, "pro": 50}
+
+CHECKOUT_SUCCESS_URL = os.getenv("CHECKOUT_SUCCESS_URL", f"{FRONTEND_URL}/billing/success")
+CHECKOUT_CANCEL_URL = os.getenv("CHECKOUT_CANCEL_URL", f"{FRONTEND_URL}/billing/cancel")
+PORTAL_RETURN_URL = os.getenv("PORTAL_RETURN_URL", f"{FRONTEND_URL}/billing/portal/return")
