@@ -3,10 +3,17 @@ from django.contrib.auth import get_user_model
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from users.emails import send_verification_email
-from users.serializers import LoginSerializer, RegisterSerializer, VerifyEmailSerializer
+from users.emails import send_password_reset_email, send_verification_email
+from users.serializers import (
+    LoginSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,
+    RegisterSerializer,
+    VerifyEmailSerializer,
+)
 
 
 User = get_user_model()
@@ -87,3 +94,47 @@ class RefreshView(TokenRefreshView):
             self._set_refresh_cookie(response, new_refresh)
             response.data.pop("refresh", None)
         return response
+
+
+class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        refresh_token = request.data.get("refresh") or request.COOKIES.get(settings.REFRESH_COOKIE_NAME)
+        response = Response(status=status.HTTP_204_NO_CONTENT)
+        response.delete_cookie(
+            settings.REFRESH_COOKIE_NAME,
+            path=settings.REFRESH_COOKIE_PATH,
+            domain=getattr(settings, "REFRESH_COOKIE_DOMAIN", None),
+        )
+        if not refresh_token:
+            return response
+
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except TokenError:
+            pass
+        return response
+
+
+class PasswordResetRequestView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.context.get("user")
+        if user:
+            send_password_reset_email(user)
+        return Response({"detail": "If the account exists, an email has been sent."})
+
+
+class PasswordResetConfirmView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"detail": "Password has been reset."})

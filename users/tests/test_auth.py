@@ -87,3 +87,49 @@ class AuthFlowTests(APITestCase):
 
         self.assertEqual(refresh_resp.status_code, status.HTTP_200_OK)
         self.assertIn("access", refresh_resp.data)
+
+    def test_logout_clears_refresh_cookie(self):
+        user = User.objects.create_user(
+            email="logout@example.com", password="Pass1234", is_active=True
+        )
+        login_resp = self.client.post(
+            reverse("auth-login"),
+            {"email": user.email, "password": "Pass1234"},
+            format="json",
+        )
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {login_resp.data['access']}"
+        )
+        self.client.cookies["refresh_token"] = login_resp.cookies["refresh_token"].value
+        resp = self.client.post(reverse("auth-logout"), {}, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertIn("refresh_token", resp.cookies)
+
+    def test_forgot_and_reset_password_flow(self):
+        user = User.objects.create_user(
+            email="resetme@example.com", password="OldPass123", is_active=True
+        )
+        forgot_resp = self.client.post(
+            reverse("auth-forgot-password"),
+            {"email": user.email},
+            format="json",
+        )
+        self.assertEqual(forgot_resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(mail.outbox), 1)
+
+        from django.contrib.auth.tokens import default_token_generator
+
+        token = default_token_generator.make_token(user)
+        reset_resp = self.client.post(
+            reverse("auth-reset-password"),
+            {"uid": user.pk, "token": token, "new_password": "NewPass123"},
+            format="json",
+        )
+        self.assertEqual(reset_resp.status_code, status.HTTP_200_OK)
+
+        login_resp = self.client.post(
+            reverse("auth-login"),
+            {"email": user.email, "password": "NewPass123"},
+            format="json",
+        )
+        self.assertEqual(login_resp.status_code, status.HTTP_200_OK)
