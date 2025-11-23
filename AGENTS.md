@@ -241,7 +241,15 @@ Before deploying a new AGENT version:
 
 ---
 
-## 11. Non-Goals (Explicitly Out of Scope)
+## 11. Testing & Enforcement
+
+- Every change (code or configuration) must include automated tests that cover the new or modified behavior; features or fixes without tests are not acceptable.
+- Run the test suite (e.g., `python manage.py test` or environment-specific equivalent) before merge/deploy; if a subset is run, document what was executed and why.
+- CI should block merges on failing tests; do not override failures without a clear, documented waiver from the product owner.
+
+---
+
+## 12. Non-Goals (Explicitly Out of Scope)
 
 The AGENT is **not** responsible for:
 
