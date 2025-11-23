@@ -14,6 +14,7 @@ from users.serializers import (
     RegisterSerializer,
     VerifyEmailSerializer,
 )
+from users.throttles import LoginRateThrottle, PasswordResetRateThrottle, RegisterRateThrottle
 
 
 User = get_user_model()
@@ -21,6 +22,7 @@ User = get_user_model()
 
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [RegisterRateThrottle]
 
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
@@ -46,6 +48,7 @@ class VerifyEmailView(APIView):
 class LoginView(TokenObtainPairView):
     serializer_class = LoginSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [LoginRateThrottle]
 
     def _set_refresh_cookie(self, response, refresh_token: str):
         response.set_cookie(
@@ -120,6 +123,7 @@ class LogoutView(APIView):
 
 class PasswordResetRequestView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [PasswordResetRateThrottle]
 
     def post(self, request):
         serializer = PasswordResetRequestSerializer(data=request.data)

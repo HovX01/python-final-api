@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "billing",
     "apps",
+    "adminapi",
     "users",
 ]
 
@@ -130,6 +131,17 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.UserRateThrottle",
+        "rest_framework.throttling.AnonRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "user": os.getenv("DRF_THROTTLE_USER", "1000/day"),
+        "anon": os.getenv("DRF_THROTTLE_ANON", "100/day"),
+        "login": os.getenv("DRF_THROTTLE_LOGIN", "30/minute"),
+        "register": os.getenv("DRF_THROTTLE_REGISTER", "3/minute"),
+        "password_reset": os.getenv("DRF_THROTTLE_PASSWORD_RESET", "10/minute"),
+    },
 }
 
 ACCESS_TOKEN_MINUTES = int(os.getenv("ACCESS_TOKEN_LIFETIME_MINUTES", "5"))
