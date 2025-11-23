@@ -251,6 +251,12 @@ Before deploying a new AGENT version:
 
 ## 12. Non-Goals (Explicitly Out of Scope)
 
+## 13. Docker Usage Policy
+- Prefer reusing a single image/container for local validation; avoid leaving stray containers or images running after tests.
+- Only rebuild images when dependencies or Docker context change; otherwise reuse the existing image to save time/resources.
+- After finishing docker-based tests or commands, stop/remove the container if it is not needed further.
+- Keep docker-compose services minimal; do not spin up extra services beyond what the task requires.
+
 The AGENT is **not** responsible for:
 
 - Designing pricing models or arbitrarily changing plan structures.
