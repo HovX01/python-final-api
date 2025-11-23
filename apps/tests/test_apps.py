@@ -68,3 +68,43 @@ class AppTests(APITestCase):
         self.client.force_authenticate(user=self.owner)
         resp = self.client.delete(reverse("app-detail", args=[app.id]))
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_collaborators_list_add_delete_owner_only(self):
+        app = App.objects.create(name="Owner App", owner=self.owner)
+        AppUser.objects.create(app=app, user=self.owner, role=AppUser.Role.OWNER)
+
+        # non-owner cannot list or add
+        self.client.force_authenticate(user=self.editor)
+        list_resp = self.client.get(reverse("app-collaborators", args=[app.id]))
+        self.assertEqual(list_resp.status_code, status.HTTP_403_FORBIDDEN)
+        add_resp = self.client.post(
+            reverse("app-collaborators", args=[app.id]),
+            {"email": self.editor.email, "role": AppUser.Role.EDITOR},
+            format="json",
+        )
+        self.assertEqual(add_resp.status_code, status.HTTP_403_FORBIDDEN)
+
+        # owner adds collaborator
+        self.client.force_authenticate(user=self.owner)
+        add_resp = self.client.post(
+            reverse("app-collaborators", args=[app.id]),
+            {"email": self.editor.email, "role": AppUser.Role.EDITOR},
+            format="json",
+        )
+        self.assertEqual(add_resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(add_resp.data["role"], AppUser.Role.EDITOR)
+
+        list_resp = self.client.get(reverse("app-collaborators", args=[app.id]))
+        self.assertEqual(list_resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(list_resp.data), 2)
+
+        # owner cannot remove owner, can remove collaborator
+        delete_owner_resp = self.client.delete(
+            reverse("app-collaborators-delete", args=[app.id, self.owner.id])
+        )
+        self.assertEqual(delete_owner_resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+        delete_collab_resp = self.client.delete(
+            reverse("app-collaborators-delete", args=[app.id, self.editor.id])
+        )
+        self.assertEqual(delete_collab_resp.status_code, status.HTTP_204_NO_CONTENT)

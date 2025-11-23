@@ -1,5 +1,5 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
-from apps.models import AppUser
+from apps.models import AppUser, App
 
 
 class IsAppMember(BasePermission):
@@ -13,4 +13,12 @@ class IsAppMember(BasePermission):
             return membership.role in (AppUser.Role.OWNER, AppUser.Role.EDITOR)
         if request.method == "DELETE":
             return membership.role == AppUser.Role.OWNER
+        return False
+
+
+class IsAppOwner(BasePermission):
+    def has_permission(self, request, view):
+        app = getattr(view, "app", None)
+        if isinstance(app, App):
+            return app.app_users.filter(user=request.user, role=AppUser.Role.OWNER).exists()
         return False
