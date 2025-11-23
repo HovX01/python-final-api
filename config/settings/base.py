@@ -28,6 +28,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",
     "rest_framework",
+    "rest_framework_simplejwt",
+    "users",
 ]
 
 MIDDLEWARE = [
@@ -113,6 +115,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+AUTH_USER_MODEL = "users.User"
 
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", "")
 
@@ -138,3 +141,12 @@ SIMPLE_JWT = {
     "SIGNING_KEY": SECRET_KEY,
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
+
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+
+REFRESH_COOKIE_NAME = os.getenv("REFRESH_COOKIE_NAME", "refresh_token")
+REFRESH_COOKIE_SECURE = os.getenv("REFRESH_COOKIE_SECURE", "false").lower() == "true"
+REFRESH_COOKIE_SAMESITE = os.getenv("REFRESH_COOKIE_SAMESITE", "Lax")
+REFRESH_COOKIE_PATH = os.getenv("REFRESH_COOKIE_PATH", "/")
+REFRESH_COOKIE_DOMAIN = os.getenv("REFRESH_COOKIE_DOMAIN")
+REFRESH_TOKEN_MAX_AGE = int(os.getenv("REFRESH_TOKEN_MAX_AGE_SECONDS", REFRESH_TOKEN_DAYS * 24 * 60 * 60))
